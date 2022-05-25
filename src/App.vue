@@ -29,6 +29,8 @@
           <button class="btn-alt" @click="biggerPriority">+Prioridade</button>
           <button class="btn-alt" @click="smallerFirst"> SFJ</button>
           <button class="btn-alt" @click="circulation">Round robin</button>
+          <button class="btn-alt" @click="beforeFairQueue">Antes do fair queue</button>
+          <button class="btn-alt" @click="fairQueue">fairQueue</button>
           <button class="btn-alt" @click="biggerPriority">Rodar</button>
         </div>
         <div class="tasks-grid">
@@ -150,7 +152,7 @@ export default {
         total += t.time;
       });
       if (reorder) {
-        this.restartList("FIFO", total);
+        this.restartList();
       } else {
         return total;
       }
@@ -201,27 +203,91 @@ export default {
       this.tasks.forEach((eR) => (totalTime += eR.result));
       this.updateTotalTime("ROUND-ROBIN", totalTime);
     },
-    fairQuee() {
+    beforeFairQueue() {
+      // SET o mesmo tempo para todos os processo e foda-se
+      let sameTimerForAll = 10;
+      for (let y = 0; y < this.tasks.length; y++) {
+        this.tasks[y].time = sameTimerForAll;
 
-      let clone = [];
-      console.log("Task 0", this.tasks);
-      // let executionTime = Math.floor(Math.random() * 10) * 1000;
-      this.tasks.forEach(tk => {
-        let task = {
-          id: tk.id,
-          name: tk.name,
-          priority: tk.priority,
-          running: false,
-          time: tk.time,
-          result: 0,
+      }
+      console.log("TODOS RECEBENDO O MESMO TEMPO \n", this.tasks);
+    },
+    fairQueue() {
+      // Acumulador global
+
+      let quantumCounter = 0;
+      // let timeOfStartInQueue = 0;
+      // let sum = totalOfProcess;
+      // let timeInProcess = 0;
+      let totalOfProcess = this.tasks.length;
+      let processId = []
+      this.tasks.forEach((ts) => {
+        processId.push(ts.id)
+      });
+      // tempoTotal do processo / quantum
+      // 10 - 3
+      // 7 - 3
+      // let quantum = Math.floor(Math.random() * 3 );
+      let quantum = 3;
+      let sumQuantPerProcess = []
+      // let counterQuantumPerProcess = 0;
+      // let i = 0;
+      // for (let i = 0; i < this.tasks.length; i++) {
+      //   counterQuantumPerProcess = 0;
+      //   do {
+
+      //     if (this.tasks[i].time > 0) {
+      //       //                  7    10    - 3
+      //       //                   4     7     - 3
+      //       //                   1     4     - 3
+      //       //                   4     (1     - 3) < 0 == 0
+      //       //                           0 == 0 ? quantumCounter++ : ''
+      //       //Contar a quantidade de quantum pelo processo
+      //       counterQuantumPerProcess = counterQuantumPerProcess + 1;
+      //       // tempo do processo =  tempoDele - quantum
+      //       this.tasks[i].time = (this.tasks[i].time - quantum);
+      //       if (this.tasks[i].time < 0) this.tasks[i].time = 0;
+
+      //     }
+
+      //   } while (this.tasks[i].time > 0)
+      //   sumQuantPerProcess[i] = counterQuantumPerProcess
+
+      let x = 0;
+      // }
+      do {
+
+        for (let i = 0; i < quantum; i++) {
+          if (this.tasks[x].time > 0) {
+
+            this.tasks[x].time = this.tasks[x].time - 1;
+            console.log("TEMPO", this.tasks[x].time);
+            quantumCounter++;
+          } else {
+            this.tasks = this.tasks.filter((ts) => ts.time > 0)
+            console.log("Task apos o filter", this.tasks);
+            break;
+          }
 
         }
-        clone.push(task)
+        if (this.task.length == totalOfProcess) {
+          x = 0;
+        } else {
+
+          x++;
+        }
+        // this.tasks.sort((a, b) => a.time - b.time)
+        console.log("Ordenado apos ", this.tasks);
+
+
+      } while (this.tasks.length > 0);
+
+      console.log("Os processos apos a remocao \n", this.tasks, quantumCounter)
+
+      sumQuantPerProcess.forEach(sq => {
+        quantumCounter += sq;
       })
-      this.tasks = clone;
-
-
-
+      console.log("Contador global", quantumCounter);
     },
     // This method is responsible for calling all the methods that calculate the total time of the process.
     callAll() {
@@ -234,6 +300,25 @@ export default {
         return a.medium - b.medium;
       });
     },
+    generateRandomProcess(quantOfProcess) {
+      for (let i = 0; i < quantOfProcess; i++) {
+
+
+
+        let task = {
+          id: this.tasks.length + 1,
+          name: this.nameOfProcess + Math.random() * 1000,
+          priority: Math.floor(Math.random() * 5) == 0 ? 2 : Math.floor(Math.random() * 5),
+          // running: false,
+          time: Math.floor(Math.random() * 10) === 0 ? 1 : Math.floor(Math.random() * 10),
+          result: 0,
+        };
+        this.tasks.push(task);
+      }
+    }
+  },
+  mounted() {
+    this.generateRandomProcess(3)
   },
 }
 </script>

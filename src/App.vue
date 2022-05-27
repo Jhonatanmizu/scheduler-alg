@@ -21,6 +21,7 @@
           :disabled="!(this.nameOfProcess.length > 0 && this.priority > 0 && this.priority <= 5 && this.time > 0)">
           Criar processo
         </button>
+        <button class="btn btn-delete " @click="clearTasks">Limpar </button>
         <hr />
       </form>
       <div class="container">
@@ -33,7 +34,7 @@
           <button class="btn-alt" @click="fairQueue">fairQueue</button>
           <button class="btn-alt" @click="biggerPriority">Rodar</button>
         </div>
-        <div class="tasks-grid">
+        <div class="tasks-grid" v-if="this.tasks">
           <div class="task" v-for="task in tasks" :key="task.id">
             <div class="task-content">
               <h4>id :</h4>
@@ -79,6 +80,7 @@
       </table>
 
     </div>
+
   </main>
 </template>
 
@@ -95,6 +97,7 @@ export default {
       time: 1,
       tasks: [],
       results: [],
+      sortedTasks: []
     }
   },
   methods: {
@@ -213,85 +216,52 @@ export default {
       console.log("TODOS RECEBENDO O MESMO TEMPO \n", this.tasks);
     },
     fairQueue() {
-      // Acumulador global
-
-      let quantumCounter = 0;
-      // let timeOfStartInQueue = 0;
-      // let sum = totalOfProcess;
-      // let timeInProcess = 0;
+      /*
+    
+      // Total de processo na memória
       let totalOfProcess = this.tasks.length;
-      let processId = []
-      this.tasks.forEach((ts) => {
-        processId.push(ts.id)
-      });
-      // tempoTotal do processo / quantum
-      // 10 - 3
-      // 7 - 3
-      // let quantum = Math.floor(Math.random() * 3 );
+         */
+      // Momento de criação durante o processo
+      let momentOfCreationByPc = []
+      //Quantum fixo
       let quantum = 3;
-      let sumQuantPerProcess = []
-      // let counterQuantumPerProcess = 0;
-      // let i = 0;
-      // for (let i = 0; i < this.tasks.length; i++) {
-      //   counterQuantumPerProcess = 0;
-      //   do {
+      // Acumulador global
+      let globalCounterQuantum = this.tasks.length * quantum;
+      //  QuantoJaUsouDeCPU = soma dos quantum pelo processo
+      console.log("Arredondamento", Math.ceil(10 / 3));
+      let i = 0;
+      let quantumPerProcess = this.tasks.map((ts) => {
 
-      //     if (this.tasks[i].time > 0) {
-      //       //                  7    10    - 3
-      //       //                   4     7     - 3
-      //       //                   1     4     - 3
-      //       //                   4     (1     - 3) < 0 == 0
-      //       //                           0 == 0 ? quantumCounter++ : ''
-      //       //Contar a quantidade de quantum pelo processo
-      //       counterQuantumPerProcess = counterQuantumPerProcess + 1;
-      //       // tempo do processo =  tempoDele - quantum
-      //       this.tasks[i].time = (this.tasks[i].time - quantum);
-      //       if (this.tasks[i].time < 0) this.tasks[i].time = 0;
-
-      //     }
-
-      //   } while (this.tasks[i].time > 0)
-      //   sumQuantPerProcess[i] = counterQuantumPerProcess
-
-      let x = 0;
-      // }
-      do {
-
-        for (let i = 0; i < quantum; i++) {
-          if (this.tasks[x].time > 0) {
-
-            this.tasks[x].time = this.tasks[x].time - 1;
-            console.log("TEMPO", this.tasks[x].time);
-            quantumCounter++;
-          } else {
-            this.tasks = this.tasks.filter((ts) => ts.time > 0)
-            console.log("Task apos o filter", this.tasks);
-            break;
-          }
-
-        }
-        if (this.task.length == totalOfProcess) {
-          x = 0;
-        } else {
-
-          x++;
-        }
-        // this.tasks.sort((a, b) => a.time - b.time)
-        console.log("Ordenado apos ", this.tasks);
-
-
-      } while (this.tasks.length > 0);
-
-      console.log("Os processos apos a remocao \n", this.tasks, quantumCounter)
-
-      sumQuantPerProcess.forEach(sq => {
-        quantumCounter += sq;
+        momentOfCreationByPc.push(quantum * i)
+        i++;
+        return Math.ceil(ts.time / quantum)
       })
-      console.log("Contador global", quantumCounter);
+      console.log("Quantum utilizado por cada processo", quantumPerProcess);
+      console.log("Acumulador global de quantum", globalCounterQuantum)
+      console.log("Momento de criação de cada processo", momentOfCreationByPc);
+      // TempoTranscorrido
+      let processTimeT = momentOfCreationByPc.map((mC) => globalCounterQuantum - mC);
+      console.log("Tempo transcorrido T", processTimeT);
+      // QuantoDeveria ter usado f  = h/(t/n)
+      let supposedTobeUsed = []
+      for (let x = 0; x < this.tasks.length; x++) {
+        let f = 0;
+        f = quantumPerProcess[x] / (processTimeT[x] / this.tasks.length);
+        supposedTobeUsed.push(f);
+
+      }
+      console.log("Quanto cada processo deveria ter usado", supposedTobeUsed)
+      this.tasks.forEach((ts, index) => {
+        ts.supposed = supposedTobeUsed[index]
+      })
+      console.log("As tarefas", this.tasks)
+      this.tasks.sort((a, b) => b.supposed - a.supposed);
+      console.log("Tasks Ordenados", this.tasks)
+      this.updateTotalTime("Garantido", this.fifoAlg(false))
     },
     // This method is responsible for calling all the methods that calculate the total time of the process.
     callAll() {
-      this.tasks = [];
+      // this.tasks = [];
       this.fifoAlg(true);
       this.smallerFirst();
       this.biggerPriority();
@@ -302,9 +272,6 @@ export default {
     },
     generateRandomProcess(quantOfProcess) {
       for (let i = 0; i < quantOfProcess; i++) {
-
-
-
         let task = {
           id: this.tasks.length + 1,
           name: this.nameOfProcess + Math.random() * 1000,
@@ -315,6 +282,9 @@ export default {
         };
         this.tasks.push(task);
       }
+    },
+    clearTasks() {
+      this.tasks = [];
     }
   },
   mounted() {
@@ -563,5 +533,13 @@ body {
 
 .styled-table tbody tr:last-of-type {
   border-bottom: 2px solid #333;
+}
+
+.main-form .btn-delete {
+  background-color: rgba(255, 100, 204, 0.9);
+}
+
+.gap {
+  gap: 1rem !important;
 }
 </style>

@@ -207,13 +207,13 @@ export default {
       this.updateTotalTime("ROUND-ROBIN", totalTime);
     },
     beforeFairQueue() {
-      // SET o mesmo tempo para todos os processo e foda-se
+      // SET o mesmo tempo para todos os processos
       let sameTimerForAll = 10;
       for (let y = 0; y < this.tasks.length; y++) {
         this.tasks[y].time = sameTimerForAll;
 
       }
-      console.log("TODOS RECEBENDO O MESMO TEMPO \n", this.tasks);
+
     },
     fairQueue() {
       /*
@@ -228,7 +228,7 @@ export default {
       // Acumulador global
       let globalCounterQuantum = this.tasks.length * quantum;
       //  QuantoJaUsouDeCPU = soma dos quantum pelo processo
-      console.log("Arredondamento", Math.ceil(10 / 3));
+      // console.log("Arredondamento", Math.ceil(10 / 3));
       let i = 0;
       let quantumPerProcess = this.tasks.map((ts) => {
 
